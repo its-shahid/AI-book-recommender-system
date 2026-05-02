@@ -138,7 +138,7 @@ def get_smart_explanation(selected_book: str, recommended_books: list) -> str:
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
         response = requests.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
             params={"key": api_key},
             headers={"Content-Type": "application/json"},
             json={
@@ -147,6 +147,7 @@ def get_smart_explanation(selected_book: str, recommended_books: list) -> str:
             timeout=20,
         )
         data = response.json()
+        # Debug: agar error aaye toh response dikhao
         if "candidates" not in data:
             return f"_(API Error: {data})_"
         return data["candidates"][0]["content"]["parts"][0]["text"].strip()
