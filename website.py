@@ -3,9 +3,7 @@ import streamlit as st
 import numpy as np
 import requests
 
-
 st.set_page_config(page_title="Book Recommender System", layout="wide", page_icon="📚")
-
 
 st.markdown("""
 <style>
@@ -17,10 +15,8 @@ html, body, [class*="css"] {
     color: #2c1a0e;
 }
 h1, h2, h3 { font-family: 'Playfair Display', serif; }
-
 .stApp { background-color: #fdf8f2; }
 
-/* Hero banner */
 .hero {
     background: linear-gradient(135deg, #2c1a0e 0%, #5c3317 60%, #8b5e3c 100%);
     border-radius: 16px;
@@ -31,7 +27,6 @@ h1, h2, h3 { font-family: 'Playfair Display', serif; }
 .hero h1 { color: #f5d9b0; font-size: 2.6rem; margin-bottom: 0.3rem; }
 .hero p  { color: #d4b896; font-size: 1.05rem; margin: 0; }
 
-/* Book card */
 .book-card {
     background: #fff8f0;
     border: 1px solid #e8d5c0;
@@ -46,7 +41,6 @@ h1, h2, h3 { font-family: 'Playfair Display', serif; }
 .book-title { font-family: 'Playfair Display', serif; font-size: 0.82rem; color: #3d1f0a;
               margin-top: 0.5rem; font-weight: 600; line-height: 1.3; }
 
-/* AI explanation box */
 .ai-box {
     background: linear-gradient(135deg, #fff3e0, #fce8cc);
     border-left: 4px solid #c0692a;
@@ -60,7 +54,6 @@ h1, h2, h3 { font-family: 'Playfair Display', serif; }
 .ai-label { font-weight: 700; color: #c0692a; font-size: 0.78rem;
             text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem; }
 
-/* Selectbox / button overrides */
 div[data-testid="stSelectbox"] > div { border-color: #c0692a !important; border-radius: 8px; }
 button[kind="primary"], .stButton > button {
     background: #5c3317 !important;
@@ -74,7 +67,6 @@ button[kind="primary"], .stButton > button {
 }
 .stButton > button:hover { background: #8b5e3c !important; }
 
-/* Stat chip */
 .stat-chip {
     display: inline-block;
     background: #5c3317;
@@ -91,17 +83,16 @@ button[kind="primary"], .stButton > button {
 
 @st.cache_resource
 def load_data():
-    model        = pickle.load(open('model.pkl',       'rb'))
-    book_names   = pickle.load(open('book_names.pkl',  'rb'))
-    final_rating = pickle.load(open('final_rating.pkl','rb'))
-    book_pivot   = pickle.load(open('book_pivot.pkl',  'rb'))
+    model        = pickle.load(open('model.pkl',        'rb'))
+    book_names   = pickle.load(open('book_names.pkl',   'rb'))
+    final_rating = pickle.load(open('final_rating.pkl', 'rb'))
+    book_pivot   = pickle.load(open('book_pivot.pkl',   'rb'))
 
-   
     rename_map = {
-        'Book-Title':   'title',
-        'Image-URL-L':  'image_url',
-        'User-ID':      'user_id',
-        'Book-Rating':  'rating',
+        'Book-Title':  'title',
+        'Image-URL-L': 'image_url',
+        'User-ID':     'user_id',
+        'Book-Rating': 'rating',
     }
     cols_to_rename = {k: v for k, v in rename_map.items() if k in final_rating.columns}
     if cols_to_rename:
@@ -123,7 +114,6 @@ def fetch_poster(suggestions):
 
 
 def recommend_book(book_name):
-    # ── DOMAIN GUARD: reject anything not in our book list ──
     if book_name not in book_pivot.index:
         return [], [], "OUT_OF_DOMAIN"
 
@@ -132,17 +122,12 @@ def recommend_book(book_name):
         book_pivot.iloc[book_id, :].values.reshape(1, -1),
         n_neighbors=6
     )
-    poster_urls  = fetch_poster(suggestions)
-    books_list   = [book_pivot.index[i] for i in suggestions[0]]
+    poster_urls = fetch_poster(suggestions)
+    books_list  = [book_pivot.index[i] for i in suggestions[0]]
     return books_list, poster_urls, "OK"
 
 
 def get_smart_explanation(selected_book: str, recommended_books: list[str]) -> str:
-    """
-    Calls the recommendation engine to generate a natural-language
-    explanation of why the recommended books match the selected one.
-    Domain is enforced in the system prompt.
-    """
     rec_list = ", ".join(recommended_books[:5])
     prompt = (
         f"A reader enjoyed the book '{selected_book}'. "
@@ -174,8 +159,6 @@ def get_smart_explanation(selected_book: str, recommended_books: list[str]) -> s
         return f"_(Explanation engine unavailable: {e})_"
 
 
-
-
 st.markdown("""
 <div class="hero">
   <h1>📚 Book Recommender System</h1>
@@ -186,7 +169,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Stats row
 st.markdown(
     f'<span class="stat-chip">📖 {len(book_names):,} Books</span>'
     f'<span class="stat-chip">🤖 Smart Recommendations</span>'
@@ -195,7 +177,6 @@ st.markdown(
 )
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Search
 col_sel, col_btn = st.columns([4, 1])
 with col_sel:
     selected_book = st.selectbox(
@@ -204,17 +185,15 @@ with col_sel:
         help="Only books present in our catalogue are supported."
     )
 with col_btn:
-    st.markdown("<br>", unsafe_allow_html=True)          # vertical align
+    st.markdown("<br>", unsafe_allow_html=True)
     show = st.button("Recommend →", use_container_width=True)
 
 
 if show:
-
     if selected_book not in list(book_pivot.index):
         st.error(
             "❌ **Out of domain:** This book is not in our catalogue. "
-            "Please select a book from the dropdown list. "
-            "This system only recommends books within its trained dataset."
+            "Please select a book from the dropdown list."
         )
         st.stop()
 
@@ -225,13 +204,11 @@ if show:
         st.error("❌ Could not find recommendations for this title. Please try another book.")
         st.stop()
 
-  
     display_books  = books_list[1:6]
     display_covers = poster_urls[1:6]
 
     st.markdown("---")
     st.subheader(f"📖 Because you liked: *{selected_book}*")
-
 
     cols = st.columns(5)
     for i, (title, cover) in enumerate(zip(display_books, display_covers)):
@@ -243,7 +220,6 @@ if show:
             </div>
             """, unsafe_allow_html=True)
 
- 
     st.markdown("<br>", unsafe_allow_html=True)
     with st.spinner("🔍 Analysing why these books match…"):
         explanation = get_smart_explanation(selected_book, display_books)
@@ -255,13 +231,11 @@ if show:
     </div>
     """, unsafe_allow_html=True)
 
-    
     st.info(
         "ℹ️ **Domain notice:** This system only recommends books. "
         "Queries outside the book domain are not supported.",
         icon="📚"
     )
-
 
     st.markdown("""
     <div style='text-align:center; margin-top:3rem; color:#8b5e3c; font-size:0.8rem;'>
