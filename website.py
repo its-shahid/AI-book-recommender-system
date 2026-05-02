@@ -127,34 +127,27 @@ def recommend_book(book_name):
     return books_list, poster_urls, "OK"
 
 
-def get_smart_explanation(selected_book: str, recommended_books: list[str]) -> str:
+def get_smart_explanation(selected_book: str, recommended_books: list) -> str:
     rec_list = ", ".join(recommended_books[:5])
     prompt = (
         f"A reader enjoyed the book '{selected_book}'. "
         f"A collaborative-filtering model recommended these books: {rec_list}. "
-        "In 3–4 sentences, explain what themes, style, or audience these books "
-        "share with the original. Be warm, specific, and helpful. "
-        "Do NOT recommend books outside this list or answer unrelated questions."
+        "In 3-4 sentences, explain what themes, style, or audience these books "
+        "share with the original. Be warm, specific, and helpful."
     )
     try:
+        api_key = st.secrets["GOOGLE_API_KEY"]
         response = requests.post(
-            "https://api.anthropic.com/v1/messages",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+            params={"key": api_key},
             headers={"Content-Type": "application/json"},
             json={
-                "model": "claude-sonnet-4-20250514",
-                "max_tokens": 1000,
-                "system": (
-                    "You are a book recommendation assistant. "
-                    "You ONLY discuss books and reading. "
-                    "If asked anything unrelated to books or literature, "
-                    "politely decline and redirect to books."
-                ),
-                "messages": [{"role": "user", "content": prompt}],
+                "contents": [{"parts": [{"text": prompt}]}]
             },
             timeout=20,
         )
         data = response.json()
-        return data["content"][0]["text"].strip()
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception as e:
         return f"_(Explanation engine unavailable: {e})_"
 
